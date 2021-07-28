@@ -1,0 +1,9 @@
+{
+  "include": ["index.ts", "commands/**/*"],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "declaration": true,
+    "outDir": "dist",
+    "strict": true
+  }
+}

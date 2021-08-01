@@ -1,5 +1,5 @@
 import { Collection, MessageComponentInteraction } from "discord.js";
-import { Command } from "../index";
+import { Command } from "../discordjs";
 
 export default (
   commands: Collection<string, Command>,

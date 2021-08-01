@@ -2,7 +2,7 @@
   "name": "slash-commands-framework",
   "version": "0.1.0",
   "description": "A framework for Discord application utilizing slash commands.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "node .",
     "build": "tsc",
@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/alexanderl19/slash-commands-framework#readme",
   "dependencies": {
+    "@discordjs/builders": "^0.2.0",
+    "discord-api-types": "^0.20.2",
     "discord.js": "github:discordjs/discord.js"
   },
   "devDependencies": {

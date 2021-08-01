@@ -1,5 +1,5 @@
 {
-  "include": ["index.ts", "commands/**/*"],
+  "include": ["src"],
   "compilerOptions": {
     "esModuleInterop": true,
     "declaration": true,

@@ -1,74 +1,62 @@
-import * as Discord from "discord.js";
-import { ClientCollections, Command } from "./discord";
-import { ApplicationCommandData, ClientOptions } from "discord.js";
-import * as fs from "fs";
+import {
+  ApplicationCommandData,
+  ButtonInteraction,
+  Client as DiscordClient,
+  ClientOptions,
+  Collection,
+  CommandInteraction,
+  Intents,
+  SelectMenuInteraction,
+} from "discord.js";
+import ready from "./eventHandlers/ready";
+import getCommand from "./util/getCommand";
+
+export class ClientCollections extends DiscordClient {
+  commands?: Collection<string, Command>;
+}
+
+export interface Command extends ApplicationCommandData {
+  commandExecute?: (interaction: CommandInteraction) => Promise<void>;
+  buttonExecute?: (interaction: ButtonInteraction) => Promise<void>;
+  selectMenuExecute?: (interaction: SelectMenuInteraction) => Promise<void>;
+}
 
 export class Client {
-  constructor(token: string, commands: [Command], options: ClientOptions) {
-    const client: ClientCollections = new Discord.Client(
+  constructor(token: string, commands: Command[], options?: ClientOptions) {
+    const client: ClientCollections = new DiscordClient(
       options || {
-        intents: new Discord.Intents(512),
+        intents: new Intents(512),
       }
     );
-    client.commands = new Discord.Collection();
-    for (let command of commands) client.commands.set(command.name, command);
 
-    const commandFolders = fs.readdirSync("./commands");
     client.once("ready", () => {
-      let commands: ApplicationCommandData[] = [];
-      client.commands!.forEach((command) => {
-        commands.push({
-          name: command.name,
-          description: command.description,
-          options: command.options,
-        });
-      });
-      if (!client.application)
-        throw new Error("The Client OAuth2 Application does not exist.");
-      client.application.commands.set(commands);
+      ready(client, commands);
     });
 
     client.on("interactionCreate", async (interaction) => {
       if (!interaction.isMessageComponent()) return;
+      if (!client.commands) return;
 
-      if (interaction.isCommand()) {
-        const command = client.commands!.get(interaction.commandName);
+      const command = getCommand(client.commands, interaction);
+      if (!command) return;
 
-        if (command && command.commandExecute)
-          try {
-            await command.commandExecute(interaction);
-          } catch (error) {
-            console.error(error);
-          }
-      }
+      try {
+        if (interaction.isCommand() && command.commandExecute) {
+          await command.commandExecute(interaction);
+        }
 
-      if (interaction.isButton()) {
-        const command = client.commands!.get(
-          interaction.message.interaction.commandName
-        );
+        if (interaction.isButton() && command.buttonExecute) {
+          await command.buttonExecute(interaction);
+        }
 
-        if (command && command.buttonExecute)
-          try {
-            await command.buttonExecute(interaction);
-          } catch (error) {
-            console.error(error);
-          }
-      }
-
-      if (interaction.isSelectMenu()) {
-        const command = client.commands!.get(
-          interaction.message.interaction.commandName
-        );
-
-        if (command && command.selectMenuExecute)
-          try {
-            await command.selectMenuExecute(interaction);
-          } catch (error) {
-            console.error(error);
-          }
+        if (interaction.isSelectMenu() && command.selectMenuExecute) {
+          await command.selectMenuExecute(interaction);
+        }
+      } catch (error) {
+        console.error(error);
       }
     });
 
-    client.login(process.env.TOKEN);
+    client.login(token);
   }
 }
